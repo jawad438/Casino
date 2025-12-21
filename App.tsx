@@ -6,23 +6,32 @@ import { GameWrapper } from './components/GameWrapper';
 import { GameID } from './types';
 
 const App: React.FC = () => {
-  // Balance is initialized to 100 on every load/refresh.
-  // No localStorage side effects are used, ensuring a clean state every time.
+  /**
+   * Balance is initialized to 100 on every load/refresh.
+   * State is purely in-memory; no localStorage persistence is used.
+   */
   const [balance, setBalance] = useState<number>(100);
   const [activeGame, setActiveGame] = useState<GameID | null>(null);
 
   const handleUpdateBalance = (amount: number) => {
-    setBalance(prev => Math.max(0, prev + amount));
+    setBalance(prev => {
+      const newBalance = prev + amount;
+      return Math.max(0, newBalance);
+    });
   };
 
   const handleReset = () => {
-    // Allows the user to top-up manually if they hit $0 without refreshing.
+    // Manual top-up allowed only when bankrupt to avoid needing a full refresh.
     if (balance === 0) setBalance(100);
   };
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col">
-      <Header balance={balance} onReset={handleReset} onGoHome={() => setActiveGame(null)} />
+      <Header 
+        balance={balance} 
+        onReset={handleReset} 
+        onGoHome={() => setActiveGame(null)} 
+      />
       
       <main className="flex-grow container mx-auto px-4 py-8">
         {activeGame ? (
@@ -38,7 +47,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="py-6 border-t border-white/5 text-center text-zinc-500 text-sm">
-        <p>© 2024 Velvet Vault Casino • Responsible Gambling Simulated • Refresh to Reset</p>
+        <p>© 2024 Velvet Vault Casino • Simulated Gambling Only • Refresh Page to Reset Balance</p>
       </footer>
     </div>
   );
