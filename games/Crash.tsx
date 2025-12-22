@@ -41,10 +41,10 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
     multRef.current = currentMult;
     setMultiplier(currentMult);
 
-    // Every 0.1 seconds (100ms), there's a 5% chance of crashing
+    // Every 0.1 seconds (100ms), there's a 12% chance of crashing
     if (time - lastTickRef.current >= 100) {
       lastTickRef.current = time;
-      if (Math.random() < 0.05) {
+      if (Math.random() < 0.12) {
         runningRef.current = false;
         setStatus('crashed');
         return;
@@ -155,7 +155,7 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
       </div>
       
       <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.1em] text-center max-w-xs">
-        System: 5% crash risk per 0.1s. Multiplier increases exponentially with flight time.
+        System: 12% crash risk per 0.1s. Multiplier increases exponentially with flight time.
       </div>
     </div>
   );

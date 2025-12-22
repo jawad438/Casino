@@ -1,28 +1,9 @@
 
 import React, { useState } from 'react';
 
-interface DiceRotation {
-  x: number;
-  y: number;
-  z: number;
-}
-
-const FACE_ROTATIONS: Record<number, DiceRotation> = {
-  1: { x: 0, y: 0, z: 0 },
-  2: { x: 0, y: -90, z: 0 },
-  3: { x: -90, y: 0, z: 0 },
-  4: { x: 90, y: 0, z: 0 },
-  5: { x: 0, y: 90, z: 0 },
-  6: { x: 180, y: 0, z: 0 },
-};
-
 export const DiceDuel: React.FC<{ balance: number; updateBalance: (a: number) => void }> = ({ balance, updateBalance }) => {
   const [bet, setBet] = useState(10);
   const [rolls, setRolls] = useState({ player: 1, house: 1 });
-  const [rotations, setRotations] = useState({ 
-    player: { x: 0, y: 0, z: 0 }, 
-    house: { x: 0, y: 0, z: 0 } 
-  });
   const [rolling, setRolling] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -33,28 +14,11 @@ export const DiceDuel: React.FC<{ balance: number; updateBalance: (a: number) =>
     setRolling(true);
     setMessage('');
 
-    const playerTarget = Math.floor(Math.random() * 6) + 1;
-    const houseTarget = Math.floor(Math.random() * 6) + 1;
-
-    // Tumble effect with hidden faces during spin
-    const extraX = 1440 + Math.random() * 360; 
-    const extraY = 1440 + Math.random() * 360;
-    const extraZ = 720 + Math.random() * 360;
-
-    setRotations({
-      player: { 
-        x: FACE_ROTATIONS[playerTarget].x + extraX, 
-        y: FACE_ROTATIONS[playerTarget].y + extraY,
-        z: extraZ
-      },
-      house: { 
-        x: FACE_ROTATIONS[houseTarget].x + extraX, 
-        y: FACE_ROTATIONS[houseTarget].y + extraY,
-        z: extraZ
-      }
-    });
-
+    // Short delay to simulate the action without spinning
     setTimeout(() => {
+      const playerTarget = Math.floor(Math.random() * 6) + 1;
+      const houseTarget = Math.floor(Math.random() * 6) + 1;
+      
       setRolls({ player: playerTarget, house: houseTarget });
       setRolling(false);
 
@@ -67,85 +31,52 @@ export const DiceDuel: React.FC<{ balance: number; updateBalance: (a: number) =>
         updateBalance(validBet);
         setMessage('Tie! Bet returned.');
       }
-    }, 1500);
+    }, 400);
   };
 
-  const Cube = ({ rotation, value, isRolling }: { rotation: DiceRotation, value: number, isRolling: boolean }) => (
-    <div className="scene w-24 h-24 sm:w-32 sm:h-32">
-      <div 
-        className={`cube w-full h-full relative preserve-3d ${isRolling ? 'animate-tumble' : ''}`}
-        style={{ 
-          transform: `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`,
-          transition: isRolling ? 'none' : 'transform 1.5s cubic-bezier(0.15, 0, 0.15, 1)'
-        }}
-      >
-        <div className="face front">{!isRolling ? 1 : ''}</div>
-        <div className="face back">{!isRolling ? 6 : ''}</div>
-        <div className="face right">{!isRolling ? 2 : ''}</div>
-        <div className="face left">{!isRolling ? 5 : ''}</div>
-        <div className="face top">{!isRolling ? 3 : ''}</div>
-        <div className="face bottom">{!isRolling ? 4 : ''}</div>
-      </div>
-      <style>{`
-        .scene { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
-        .cube { position: relative; }
-        .face {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-          border: 1px solid rgba(0,0,0,0.1);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 2.5rem;
-          font-weight: 900;
-          color: #0f172a;
-          border-radius: 12px;
-          box-shadow: inset 0 0 20px rgba(0,0,0,0.05), 0 5px 15px rgba(0,0,0,0.1);
-          backface-visibility: visible;
-        }
-        .front  { transform: rotateY(0deg) translateZ(calc(48px)); }
-        .back   { transform: rotateY(180deg) translateZ(calc(48px)); }
-        .right  { transform: rotateY(90deg) translateZ(calc(48px)); }
-        .left   { transform: rotateY(-90deg) translateZ(calc(48px)); }
-        .top    { transform: rotateX(90deg) translateZ(calc(48px)); }
-        .bottom { transform: rotateX(-90deg) translateZ(calc(48px)); }
-        
-        @media (min-width: 640px) {
-          .front  { transform: rotateY(0deg) translateZ(calc(64px)); }
-          .back   { transform: rotateY(180deg) translateZ(calc(64px)); }
-          .right  { transform: rotateY(90deg) translateZ(calc(64px)); }
-          .left   { transform: rotateY(-90deg) translateZ(calc(64px)); }
-          .top    { transform: rotateX(90deg) translateZ(calc(64px)); }
-          .bottom { transform: rotateX(-90deg) translateZ(calc(64px)); }
-        }
+  const DieFace = ({ value }: { value: number }) => {
+    const renderPips = () => {
+      const pips = [];
+      const positions = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 3, 6, 2, 5, 8]
+      };
+      
+      const dots = positions[value as keyof typeof positions] || [];
+      
+      for (let i = 0; i < 9; i++) {
+        pips.push(
+          <div key={i} className="flex items-center justify-center w-full h-full">
+            {dots.includes(i) && (
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-zinc-900 rounded-full shadow-inner" />
+            )}
+          </div>
+        );
+      }
+      return pips;
+    };
 
-        @keyframes tumble {
-          0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
-          25% { transform: rotateX(90deg) rotateY(180deg) rotateZ(45deg); }
-          50% { transform: rotateX(180deg) rotateY(360deg) rotateZ(90deg); }
-          75% { transform: rotateX(270deg) rotateY(180deg) rotateZ(135deg); }
-          100% { transform: rotateX(360deg) rotateY(0) rotateZ(180deg); }
-        }
-        .animate-tumble {
-          animation: tumble 0.4s infinite linear;
-        }
-      `}</style>
-    </div>
-  );
+    return (
+      <div className={`w-24 h-24 sm:w-32 sm:h-32 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 grid grid-cols-3 grid-rows-3 gap-1 transition-all duration-200 ${rolling ? 'opacity-40 scale-95' : 'opacity-100 scale-100'}`}>
+        {!rolling ? renderPips() : <div className="col-span-3 row-span-3 flex items-center justify-center text-4xl text-zinc-300">?</div>}
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col items-center gap-10">
       <div className="flex gap-8 sm:gap-16 items-center">
         <div className="flex flex-col items-center gap-6">
-          <Cube rotation={rotations.player} value={rolls.player} isRolling={rolling} />
+          <DieFace value={rolls.player} />
           <span className="text-xs font-black uppercase text-zinc-500 tracking-[0.2em] bg-zinc-900/50 px-3 py-1 rounded-full border border-white/5">Player</span>
         </div>
         <div className="text-4xl italic font-black text-white/10 select-none">VS</div>
         <div className="flex flex-col items-center gap-6">
-          <Cube rotation={rotations.house} value={rolls.house} isRolling={rolling} />
+          <DieFace value={rolls.house} />
           <span className="text-xs font-black uppercase text-zinc-500 tracking-[0.2em] bg-zinc-900/50 px-3 py-1 rounded-full border border-white/5">House</span>
         </div>
       </div>
@@ -184,7 +115,7 @@ export const DiceDuel: React.FC<{ balance: number; updateBalance: (a: number) =>
             disabled={rolling || balance < bet || bet <= 0}
             className="w-full py-5 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl shadow-lg shadow-orange-600/20 uppercase tracking-[0.2em] text-lg transition-all active:scale-95"
           >
-            {rolling ? 'ROLLING...' : 'SHOOT DICE'}
+            {rolling ? 'SHAKING...' : 'SHOOT DICE'}
           </button>
         </div>
         

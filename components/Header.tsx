@@ -12,14 +12,36 @@ export const Header: React.FC<HeaderProps> = ({ balance, onReset, onGoHome }) =>
     <header className="sticky top-0 z-50 bg-[#0a0a0b]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex justify-between items-center">
       <button 
         onClick={onGoHome}
-        className="flex items-center gap-2 group"
+        className="flex items-center gap-3 group"
       >
         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:bg-indigo-500 transition-colors">
-          <span className="text-xl font-black italic tracking-tighter">V</span>
+          <svg viewBox="0 0 100 100" className="w-7 h-7 drop-shadow-sm">
+            {/* 
+              Star of David: Two perfectly centered overlapping equilateral triangles.
+              Centroid: (50, 50)
+              Circumradius: 40
+            */}
+            {/* Upward Triangle */}
+            <path 
+              d="M50 10 L84.64 70 L15.36 70 Z" 
+              fill="none" 
+              stroke="white" 
+              strokeWidth="8" 
+              strokeLinejoin="round"
+            />
+            {/* Downward Triangle */}
+            <path 
+              d="M50 90 L15.36 30 L84.64 30 Z" 
+              fill="none" 
+              stroke="white" 
+              strokeWidth="8" 
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
         <div className="text-left hidden sm:block">
-          <h1 className="text-lg font-bold leading-none tracking-tight">VELVET VAULT</h1>
-          <span className="text-[10px] text-zinc-500 font-semibold tracking-[0.2em] uppercase">Digital Casino</span>
+          <h1 className="text-lg font-bold leading-none tracking-tight">HAVA NAGILA</h1>
+          <span className="text-[10px] text-zinc-500 font-semibold tracking-[0.2em] uppercase">Celebration Casino</span>
         </div>
       </button>
 

@@ -89,7 +89,8 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
     setGameState('gameOver');
   };
 
-  const CardView = ({ card, hidden = false }: { card: Card; hidden?: boolean }) => (
+  // Fixed: Added React.FC type to handle 'key' prop correctly in JSX
+  const CardView: React.FC<{ card: Card; hidden?: boolean }> = ({ card, hidden = false }) => (
     <div className={`w-16 h-24 sm:w-20 sm:h-28 rounded-xl border flex flex-col items-center justify-center font-bold text-xl ${hidden ? 'bg-indigo-900 border-white/20' : 'bg-white border-zinc-200 text-zinc-900 shadow-lg'}`}>
       {!hidden ? (
         <>
