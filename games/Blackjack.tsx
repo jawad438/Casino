@@ -37,8 +37,9 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
   const [message, setMessage] = useState('');
 
   const startNewGame = () => {
-    if (balance < bet) return;
-    updateBalance(-bet);
+    const validBet = Math.min(Math.max(1, bet), balance);
+    if (balance < validBet) return;
+    updateBalance(-validBet);
     const newDeck = createDeck();
     const pHand = [newDeck.pop()!, newDeck.pop()!];
     const dHand = [newDeck.pop()!, newDeck.pop()!];
@@ -126,15 +127,29 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
         <h4 className="text-indigo-400 text-xs font-bold uppercase tracking-widest">Your Hand (Score: {calculateScore(playerHand)})</h4>
       </div>
 
-      <div className="w-full flex justify-center gap-4">
+      <div className="w-full flex flex-col items-center gap-4">
         {gameState === 'betting' || gameState === 'gameOver' ? (
-          <div className="flex items-center gap-4">
-            <div className="flex bg-zinc-900 rounded-xl p-1 border border-white/5">
+          <div className="flex flex-col items-center gap-4 w-full max-w-xs">
+            <div className="w-full space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Custom Bet</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={balance}
+                  value={bet}
+                  onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-3 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                />
+              </div>
+            </div>
+            <div className="flex bg-zinc-900 rounded-xl p-1 border border-white/5 w-full">
               {[10, 25, 50, 100].map(v => (
                 <button
                   key={v}
                   onClick={() => setBet(v)}
-                  className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${bet === v ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${bet === v ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
                 >
                   ${v}
                 </button>
@@ -142,10 +157,10 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
             </div>
             <button
               onClick={startNewGame}
-              disabled={balance < bet}
-              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20"
+              disabled={balance < bet || bet <= 0}
+              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black rounded-xl shadow-lg shadow-indigo-600/20 uppercase tracking-widest"
             >
-              DEAL ${bet}
+              DEAL HAND
             </button>
           </div>
         ) : (

@@ -9,14 +9,14 @@ export const Baccarat: React.FC<{ balance: number; updateBalance: (a: number) =>
   const [message, setMessage] = useState('');
 
   const deal = () => {
-    if (!selectedSide || balance < bet) return;
-    updateBalance(-bet);
+    const validBet = Math.min(Math.max(1, bet), balance);
+    if (!selectedSide || balance < validBet || validBet <= 0) return;
+    updateBalance(-validBet);
     setSpinning(true);
     setResult(null);
     setMessage('');
 
     setTimeout(() => {
-      // Simplified baccarat (just 0-9)
       const pScore = Math.floor(Math.random() * 10);
       const bScore = Math.floor(Math.random() * 10);
       setResult({ pScore, bScore });
@@ -28,9 +28,9 @@ export const Baccarat: React.FC<{ balance: number; updateBalance: (a: number) =>
       else winner = 'tie';
 
       if (winner === selectedSide) {
-        let payout = bet * 2;
-        if (winner === 'tie') payout = bet * 9;
-        if (winner === 'banker') payout = bet * 1.95; // Banker commission
+        let payout = validBet * 2;
+        if (winner === 'tie') payout = validBet * 9;
+        if (winner === 'banker') payout = validBet * 1.95;
         updateBalance(payout);
         setMessage('WINNER!');
       } else {
@@ -65,22 +65,34 @@ export const Baccarat: React.FC<{ balance: number; updateBalance: (a: number) =>
         ))}
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex bg-zinc-900 rounded-xl p-1 border border-white/5">
-          {[10, 50, 100].map(v => (
-            <button key={v} onClick={() => setBet(v)} className={`px-4 py-2 rounded-lg text-sm font-bold ${bet === v ? 'bg-indigo-600 text-white' : 'text-zinc-500'}`}>${v}</button>
-          ))}
+      <div className="flex flex-col items-center gap-6 w-full max-w-md bg-zinc-900/50 p-6 rounded-[2rem] border border-white/5">
+        <div className="w-full space-y-4">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Stake</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+              <input
+                type="number"
+                min="1"
+                max={balance}
+                value={bet}
+                onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
+                disabled={spinning}
+                className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-4 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              />
+            </div>
+          </div>
+          <button
+            onClick={deal}
+            disabled={spinning || !selectedSide || balance < bet || bet <= 0}
+            className="w-full py-5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-indigo-600/20 uppercase tracking-widest text-lg"
+          >
+            {spinning ? 'DEALING...' : 'PLACE BET'}
+          </button>
         </div>
-        <button
-          onClick={deal}
-          disabled={spinning || !selectedSide || balance < bet}
-          className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl"
-        >
-          {spinning ? 'DEALING...' : 'DEAL'}
-        </button>
       </div>
       
-      {message && <div className="text-xl font-black">{message}</div>}
+      {message && <div className="text-2xl font-black uppercase tracking-widest animate-in zoom-in">{message}</div>}
     </div>
   );
 };

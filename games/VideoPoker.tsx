@@ -19,8 +19,9 @@ export const VideoPoker: React.FC<{ balance: number; updateBalance: (a: number) 
   };
 
   const initialDeal = () => {
-    if (balance < bet) return;
-    updateBalance(-bet);
+    const validBet = Math.min(Math.max(1, bet), balance);
+    if (balance < validBet || validBet <= 0) return;
+    updateBalance(-validBet);
     const deck = createDeck();
     setHand(deck.slice(0, 5));
     setHeld([false, false, false, false, false]);
@@ -41,12 +42,11 @@ export const VideoPoker: React.FC<{ balance: number; updateBalance: (a: number) 
     h.forEach(c => counts[c.value] = (counts[c.value] || 0) + 1);
     const values = Object.values(counts);
     
-    if (values.includes(4)) { updateBalance(bet * 25); setMessage('FOUR OF A KIND! +$' + bet * 25); }
-    else if (values.includes(3) && values.includes(2)) { updateBalance(bet * 9); setMessage('FULL HOUSE! +$' + bet * 9); }
-    else if (values.includes(3)) { updateBalance(bet * 3); setMessage('THREE OF A KIND! +$' + bet * 3); }
-    else if (values.filter(v => v === 2).length === 2) { updateBalance(bet * 2); setMessage('TWO PAIR! +$' + bet * 2); }
+    if (values.includes(4)) { updateBalance(bet * 25); setMessage('FOUR OF A KIND! +$' + (bet * 25)); }
+    else if (values.includes(3) && values.includes(2)) { updateBalance(bet * 9); setMessage('FULL HOUSE! +$' + (bet * 9)); }
+    else if (values.includes(3)) { updateBalance(bet * 3); setMessage('THREE OF A KIND! +$' + (bet * 3)); }
+    else if (values.filter(v => v === 2).length === 2) { updateBalance(bet * 2); setMessage('TWO PAIR! +$' + (bet * 2)); }
     else if (values.includes(2)) {
-      // Check for Jacks or Better
       const pairValue = Object.keys(counts).find(k => counts[k] === 2);
       if (['J', 'Q', 'K', 'A'].includes(pairValue!)) {
         updateBalance(bet);
@@ -83,20 +83,46 @@ export const VideoPoker: React.FC<{ balance: number; updateBalance: (a: number) 
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-6 w-full max-w-md">
         {gameState === 'betting' || gameState === 'result' ? (
-          <div className="flex items-center gap-4">
-            <div className="flex bg-zinc-900 rounded-xl p-1">
-              {[10, 20, 50].map(v => (
-                <button key={v} onClick={() => setBet(v)} className={`px-4 py-2 rounded-lg text-sm font-bold ${bet === v ? 'bg-rose-600 text-white' : 'text-zinc-500'}`}>${v}</button>
+          <div className="w-full bg-zinc-900/40 p-6 rounded-[2rem] border border-white/5 space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Wager</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={balance}
+                  value={bet}
+                  onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-4 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {[10, 20, 50, 100].map(v => (
+                <button 
+                  key={v} 
+                  onClick={() => setBet(v)} 
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${bet === v ? 'bg-rose-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}
+                >
+                  ${v}
+                </button>
               ))}
             </div>
-            <button onClick={initialDeal} className="px-10 py-3 bg-rose-600 text-white font-black rounded-xl">DEAL</button>
+            <button 
+              onClick={initialDeal} 
+              disabled={balance < bet || bet <= 0}
+              className="w-full py-5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-rose-600/30 uppercase tracking-widest text-lg"
+            >
+              DEAL CARDS
+            </button>
           </div>
         ) : (
-          <button onClick={finalDraw} className="px-12 py-4 bg-yellow-500 text-black font-black rounded-xl uppercase tracking-widest">DRAW</button>
+          <button onClick={finalDraw} className="w-full py-6 bg-yellow-500 hover:bg-yellow-400 text-black font-black rounded-2xl uppercase tracking-[0.2em] shadow-xl shadow-yellow-500/20 text-xl transition-all active:scale-95">DRAW NEW CARDS</button>
         )}
-        {message && <div className="text-xl font-black text-white">{message}</div>}
+        {message && <div className="text-xl font-black text-white uppercase tracking-widest text-center">{message}</div>}
       </div>
     </div>
   );
