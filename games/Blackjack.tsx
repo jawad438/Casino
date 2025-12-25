@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '../types';
 
@@ -57,30 +56,38 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
     setPlayerHand(newHand);
     setDeck(newDeck);
     if (calculateScore(newHand) > 21) {
-      endGame('Bust! Dealer wins.');
+      stand(newHand); // Automatically stand if bust to see if dealer busts too
     }
   };
 
-  const stand = () => {
+  const stand = (finalPlayerHand?: Card[]) => {
+    const pHand = finalPlayerHand || playerHand;
     let currentDealerHand = [...dealerHand];
     let currentDeck = [...deck];
+    
     while (calculateScore(currentDealerHand) < 17) {
       currentDealerHand.push(currentDeck.pop()!);
     }
+    
     setDealerHand(currentDealerHand);
     setDeck(currentDeck);
 
-    const pScore = calculateScore(playerHand);
+    const pScore = calculateScore(pHand);
     const dScore = calculateScore(currentDealerHand);
 
-    if (dScore > 21 || pScore > dScore) {
+    if (pScore > 21 && dScore > 21) {
+      updateBalance(bet); // SYMMETRIC LOGIC: Both bust = Push
+      endGame('Double Bust! Push.');
+    } else if (pScore > 21) {
+      endGame('You Bust!');
+    } else if (dScore > 21 || pScore > dScore) {
       updateBalance(bet * 2);
-      endGame('You win!');
+      endGame('You Win!');
     } else if (pScore === dScore) {
       updateBalance(bet);
       endGame('Push.');
     } else {
-      endGame('Dealer wins.');
+      endGame('Dealer Wins.');
     }
   };
 
@@ -89,85 +96,67 @@ export const Blackjack: React.FC<{ balance: number; updateBalance: (a: number) =
     setGameState('gameOver');
   };
 
-  // Fixed: Added React.FC type to handle 'key' prop correctly in JSX
   const CardView: React.FC<{ card: Card; hidden?: boolean }> = ({ card, hidden = false }) => (
-    <div className={`w-16 h-24 sm:w-20 sm:h-28 rounded-xl border flex flex-col items-center justify-center font-bold text-xl ${hidden ? 'bg-indigo-900 border-white/20' : 'bg-white border-zinc-200 text-zinc-900 shadow-lg'}`}>
+    <div className={`w-20 h-32 sm:w-24 sm:h-36 rounded-2xl border-2 flex flex-col items-center justify-center font-bold text-2xl transition-all shadow-xl ${hidden ? 'bg-indigo-900 border-white/20' : 'bg-white border-zinc-200 text-zinc-900'}`}>
       {!hidden ? (
         <>
           <span className={['hearts', 'diamonds'].includes(card.suit) ? 'text-red-500' : 'text-zinc-900'}>{card.value}</span>
-          <span className="text-2xl">{card.suit === 'hearts' ? '♥️' : card.suit === 'diamonds' ? '♦️' : card.suit === 'clubs' ? '♣️' : '♠️'}</span>
+          <span className="text-4xl">{card.suit === 'hearts' ? '♥️' : card.suit === 'diamonds' ? '♦️' : card.suit === 'clubs' ? '♣️' : '♠️'}</span>
         </>
-      ) : <span className="text-white opacity-20 text-3xl">?</span>}
+      ) : <div className="text-white/20 text-5xl">?</div>}
     </div>
   );
 
   return (
-    <div className="flex flex-col items-center gap-8">
+    <div className="flex flex-col items-center gap-10">
       <div className="flex flex-col items-center gap-4">
-        <h4 className="text-zinc-500 text-xs font-bold uppercase tracking-widest">Dealer</h4>
-        <div className="flex gap-2">
+        <h4 className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em]">Dealer</h4>
+        <div className="flex gap-3">
           {dealerHand.map((c, i) => (
             <CardView key={i} card={c} hidden={gameState === 'playing' && i === 1} />
           ))}
         </div>
-        {gameState !== 'playing' && <span className="text-zinc-400 font-mono">Score: {calculateScore(dealerHand)}</span>}
       </div>
 
-      <div className="h-20 flex items-center justify-center">
+      <div className="h-16 flex items-center justify-center">
         {message && (
-          <div className="bg-white/10 px-6 py-2 rounded-full backdrop-blur-md border border-white/10 text-lg font-bold">
+          <div className="bg-white/10 px-10 py-3 rounded-full backdrop-blur-xl border border-white/20 text-2xl font-black text-white text-neon uppercase tracking-widest animate-in zoom-in">
             {message}
           </div>
         )}
       </div>
 
       <div className="flex flex-col items-center gap-4">
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {playerHand.map((c, i) => <CardView key={i} card={c} />)}
         </div>
-        <h4 className="text-indigo-400 text-xs font-bold uppercase tracking-widest">Your Hand (Score: {calculateScore(playerHand)})</h4>
+        <h4 className="text-blue-400 text-xs font-black uppercase tracking-[0.3em]">Your Hand ({calculateScore(playerHand)})</h4>
       </div>
 
-      <div className="w-full flex flex-col items-center gap-4">
-        {gameState === 'betting' || gameState === 'gameOver' ? (
-          <div className="flex flex-col items-center gap-4 w-full max-w-xs">
-            <div className="w-full space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Custom Bet</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
-                <input
-                  type="number"
-                  min="1"
-                  max={balance}
-                  value={bet}
-                  onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-3 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                />
-              </div>
-            </div>
-            <div className="flex bg-zinc-900 rounded-xl p-1 border border-white/5 w-full">
-              {[10, 25, 50, 100].map(v => (
-                <button
-                  key={v}
-                  onClick={() => setBet(v)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${bet === v ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
-                  ${v}
-                </button>
-              ))}
+      <div className="w-full max-w-sm">
+        {gameState !== 'playing' ? (
+          <div className="bg-zinc-900/60 p-8 rounded-[2.5rem] border border-white/10 space-y-6 shadow-2xl">
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 block text-center">Wager</label>
+              <input
+                type="number"
+                value={bet}
+                onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 text-center mono text-white font-black text-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 transition-all"
+              />
             </div>
             <button
               onClick={startNewGame}
               disabled={balance < bet || bet <= 0}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black rounded-xl shadow-lg shadow-indigo-600/20 uppercase tracking-widest"
+              className="w-full py-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-blue-600/30 uppercase tracking-[0.2em] text-xl transition-all active:scale-95"
             >
-              DEAL HAND
+              DEAL CARDS
             </button>
           </div>
         ) : (
           <div className="flex gap-4">
-            <button onClick={hit} className="px-10 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl border border-white/5">HIT</button>
-            <button onClick={stand} className="px-10 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl">STAND</button>
+            <button onClick={hit} className="flex-1 py-6 bg-zinc-800 hover:bg-zinc-700 text-white font-black rounded-2xl border border-white/10 text-xl shadow-lg transition-all active:scale-95">HIT</button>
+            <button onClick={() => stand()} className="flex-1 py-6 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl text-xl shadow-lg transition-all active:scale-95">STAND</button>
           </div>
         )}
       </div>

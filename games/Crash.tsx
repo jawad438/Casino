@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => void }> = ({ balance, updateBalance }) => {
@@ -36,15 +35,16 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
 
     const elapsed = (time - startTimeRef.current) / 1000;
     
-    // Multiplier growth: 1.08x every 0.1s (approx 8% increase per tick)
+    // Multiplier growth
     const currentMult = Math.pow(1.08, elapsed * 10);
     multRef.current = currentMult;
     setMultiplier(currentMult);
 
-    // Every 0.1 seconds (100ms), there's a 12% chance of crashing
+    // To hit 45% crash chance per second (10 ticks):
+    // (1-p)^10 = 0.55 => 1-p = 0.9416 => p = 0.0584
     if (time - lastTickRef.current >= 100) {
       lastTickRef.current = time;
-      if (Math.random() < 0.12) {
+      if (Math.random() < 0.0584) {
         runningRef.current = false;
         setStatus('crashed');
         return;
@@ -75,88 +75,60 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
 
   return (
     <div className="flex flex-col items-center gap-12">
-      <div className="relative w-full h-48 bg-zinc-950 rounded-3xl border border-white/5 flex items-center justify-center overflow-hidden">
-        {/* Glow effect that builds as multiplier increases */}
+      <div className="relative w-full h-56 bg-zinc-950 rounded-[2.5rem] border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
         <div 
-          className="absolute inset-0 bg-purple-500 opacity-0 transition-opacity duration-1000"
-          style={{ opacity: status === 'running' ? Math.min(0.2, (multiplier - 1) * 0.05) : 0 }}
+          className="absolute inset-0 bg-fuchsia-600 opacity-0 transition-opacity duration-1000"
+          style={{ opacity: status === 'running' ? Math.min(0.3, (multiplier - 1) * 0.1) : 0 }}
         />
         
-        <div className={`absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-transparent opacity-20 transition-all duration-100 ${status === 'running' ? 'scale-x-100' : 'scale-x-0'}`} />
+        <div className={`absolute bottom-0 left-0 w-full h-1.5 bg-gradient-to-r from-fuchsia-500 to-transparent opacity-40 transition-all duration-100 ${status === 'running' ? 'scale-x-100' : 'scale-x-0'}`} />
         
-        <div className={`text-7xl sm:text-9xl font-black mono transition-colors z-10 ${status === 'crashed' ? 'text-red-500' : status === 'cashedOut' ? 'text-green-400' : 'text-white'}`}>
+        <div className={`text-8xl sm:text-9xl font-black mono transition-colors z-10 ${status === 'crashed' ? 'text-red-500' : status === 'cashedOut' ? 'text-emerald-400' : 'text-white text-neon'}`}>
           {multiplier.toFixed(2)}x
         </div>
-        
-        {status === 'running' && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
-            <div className="w-full h-px bg-white/20 animate-pulse" />
-          </div>
-        )}
       </div>
 
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
         {status !== 'running' ? (
-          <div className="w-full space-y-4 bg-zinc-900/50 p-6 rounded-[2rem] border border-white/5">
+          <div className="w-full space-y-4 bg-zinc-900/80 p-8 rounded-[2.5rem] border border-white/10 shadow-xl">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Stake</label>
+              <label className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400 block text-center">Stake Amount</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
                 <input
                   type="number"
                   min="1"
                   max={balance}
                   value={bet}
                   onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-zinc-950 border border-white/5 rounded-2xl py-4 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                  className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 pl-10 pr-4 mono text-white font-bold text-xl focus:outline-none focus:ring-4 focus:ring-fuchsia-500/30 transition-all"
                 />
               </div>
-            </div>
-            <div className="flex gap-2">
-              {[10, 50, 100].map(v => (
-                <button
-                  key={v}
-                  onClick={() => setBet(v)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${bet === v ? 'bg-purple-600 text-white' : 'bg-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
-                >
-                  ${v}
-                </button>
-              ))}
             </div>
             <button
               onClick={startGame}
               disabled={balance < bet || bet <= 0}
-              className="w-full py-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-purple-600/30 uppercase tracking-widest text-lg transition-transform active:scale-95"
+              className="w-full py-6 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-fuchsia-600/30 uppercase tracking-[0.2em] text-xl transition-all active:scale-95"
             >
-              LAUNCH ROCKET
+              LAUNCH MISSION
             </button>
           </div>
         ) : (
           <button
             onClick={cashOut}
-            className="w-full max-w-sm py-8 bg-green-500 hover:bg-green-400 text-black font-black rounded-2xl shadow-lg shadow-green-500/30 uppercase tracking-[0.2em] text-3xl transition-transform active:scale-95"
+            className="w-full py-8 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-[2rem] shadow-2xl shadow-emerald-500/30 uppercase tracking-[0.3em] text-4xl transition-all active:scale-95"
           >
-            CASH OUT (${(betRef.current * multiplier).toFixed(2)})
+            CASH OUT
           </button>
         )}
         
-        <div className="h-8 flex items-center justify-center">
-          {status === 'crashed' && (
-            <div className="text-xl font-bold text-red-400 uppercase tracking-widest animate-pulse">
-              CRASHED AT {multiplier.toFixed(2)}x
-            </div>
-          )}
-          {status === 'cashedOut' && (
-            <div className="text-xl font-bold text-green-400 uppercase tracking-widest animate-in fade-in zoom-in">
-              PROFIT: +${(cashoutAmount - betRef.current).toFixed(2)}
-            </div>
-          )}
+        <div className="h-10">
+          {status === 'crashed' && <div className="text-2xl font-black text-red-500 uppercase tracking-widest text-neon">CRASHED @ {multiplier.toFixed(2)}x</div>}
+          {status === 'cashedOut' && <div className="text-2xl font-black text-emerald-400 uppercase tracking-widest text-neon animate-bounce">PROFIT: +${(cashoutAmount - betRef.current).toFixed(2)}</div>}
         </div>
       </div>
       
-      <div className="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.1em] text-center max-w-xs">
-        System: 12% crash risk per 0.1s. Multiplier increases exponentially with flight time.
-      </div>
+      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-center opacity-50">45% CRASH RISK PER SECOND • VOLATILE FLIGHT SYSTEM</p>
     </div>
   );
 };

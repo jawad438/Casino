@@ -24,31 +24,36 @@
     <style>
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #0a0a0b;
+        background-color: #020617;
         color: #f8fafc;
         overflow-x: hidden;
       }
       .mono { font-family: 'JetBrains Mono', monospace; }
       .gradient-bg {
-        background: radial-gradient(circle at top right, #1e1b4b, #0a0a0b);
+        background: radial-gradient(circle at 50% -20%, #4338ca, #1e1b4b, #020617);
+        background-attachment: fixed;
       }
       .card-gloss {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      }
+      .text-neon {
+        text-shadow: 0 0 10px currentColor;
       }
       ::-webkit-scrollbar {
         width: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #0a0a0b;
+        background: #020617;
       }
       ::-webkit-scrollbar-thumb {
-        background: #27272a;
+        background: #4338ca;
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #3f3f46;
+        background: #6366f1;
       }
     </style>
     <script type="importmap">

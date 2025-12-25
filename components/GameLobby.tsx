@@ -1,18 +1,17 @@
-
 import React from 'react';
 import { GameID, GameInfo } from '../types';
 
 const GAMES: GameInfo[] = [
-  { id: 'blackjack', name: 'Blackjack', description: 'Beat the dealer to 21.', icon: '♠️', color: 'from-blue-600 to-blue-800' },
-  { id: 'roulette', name: 'Roulette', description: 'Classic European wheel.', icon: '🎡', color: 'from-red-600 to-red-800' },
-  { id: 'slots', name: 'Slots', description: 'Triple diamond reels.', icon: '🎰', color: 'from-yellow-600 to-yellow-800' },
-  { id: 'crash', name: 'The Moon', description: 'Multiplier race to space.', icon: '🚀', color: 'from-purple-600 to-purple-800' },
-  { id: 'mines', name: 'Mines', description: 'Hidden gems in the grid.', icon: '💣', color: 'from-emerald-600 to-emerald-800' },
-  { id: 'plinko', name: 'Plinko', description: 'Drop the ball for wins.', icon: '🏐', color: 'from-pink-600 to-pink-800' },
-  { id: 'dice', name: 'Dice Duel', description: 'High stakes roll-off.', icon: '🎲', color: 'from-orange-600 to-orange-800' },
-  { id: 'baccarat', name: 'Baccarat', description: 'Player vs Banker.', icon: '🤵', color: 'from-indigo-600 to-indigo-800' },
-  { id: 'poker', name: 'Video Poker', description: 'Jacks or better.', icon: '🃏', color: 'from-rose-600 to-rose-800' },
-  { id: 'wheel', name: 'Fortune', description: 'Spin for big multipliers.', icon: '🌀', color: 'from-cyan-600 to-cyan-800' },
+  { id: 'blackjack', name: 'Blackjack', description: 'Fair Deck rules.', icon: '♠️', color: 'from-blue-400 to-indigo-600' },
+  { id: 'roulette', name: 'Roulette', description: 'Classic European wheel.', icon: '🎡', color: 'from-rose-400 to-red-600' },
+  { id: 'slots', name: 'Slots', description: 'Triple diamond reels.', icon: '🎰', color: 'from-amber-300 to-orange-500' },
+  { id: 'crash', name: 'The Moon', description: 'Race to the stars.', icon: '🚀', color: 'from-fuchsia-400 to-purple-600' },
+  { id: 'mines', name: 'Mines', description: 'Uncover the treasure.', icon: '💎', color: 'from-emerald-400 to-teal-600' },
+  { id: 'plinko', name: 'Plinko', description: 'Drop for massive wins.', icon: '🏐', color: 'from-pink-400 to-rose-500' },
+  { id: 'dice', name: 'Dice Duel', description: 'Shoot for high stakes.', icon: '🎲', color: 'from-orange-400 to-amber-600' },
+  { id: 'baccarat', name: 'Baccarat', description: '50/50 Player vs Banker.', icon: '🤵', color: 'from-indigo-400 to-blue-600' },
+  { id: 'poker', name: 'Video Poker', description: 'Jacks or better.', icon: '🃏', color: 'from-red-400 to-rose-600' },
+  { id: 'wheel', name: 'Fortune', description: 'Spin for multipliers.', icon: '🌀', color: 'from-cyan-400 to-blue-500' },
 ];
 
 interface LobbyProps {
@@ -26,18 +25,18 @@ export const GameLobby: React.FC<LobbyProps> = ({ onSelectGame }) => {
         <button
           key={game.id}
           onClick={() => onSelectGame(game.id)}
-          className="group relative h-64 overflow-hidden rounded-3xl border border-white/5 transition-all hover:scale-[1.02] hover:border-white/20 active:scale-[0.98]"
+          className="group relative h-64 overflow-hidden rounded-3xl border border-white/10 transition-all hover:scale-[1.05] hover:border-white/40 active:scale-[0.98] shadow-lg hover:shadow-2xl hover:shadow-indigo-500/20"
         >
-          <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-40 group-hover:opacity-60 transition-opacity`} />
+          <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-70 group-hover:opacity-90 transition-opacity`} />
           <div className="absolute inset-0 flex flex-col p-6 text-left">
-            <span className="text-4xl mb-auto">{game.icon}</span>
+            <span className="text-5xl mb-auto filter drop-shadow-md">{game.icon}</span>
             <div className="mt-4">
-              <h3 className="text-2xl font-black tracking-tight">{game.name}</h3>
-              <p className="text-zinc-400 text-sm mt-1">{game.description}</p>
+              <h3 className="text-2xl font-black tracking-tight text-white drop-shadow-lg">{game.name}</h3>
+              <p className="text-white/80 text-sm mt-1 font-medium">{game.description}</p>
             </div>
           </div>
-          <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 p-2 rounded-full backdrop-blur-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 p-2 rounded-full backdrop-blur-md">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </div>
