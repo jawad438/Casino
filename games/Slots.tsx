@@ -1,62 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-const SYMBOLS = ['💎', '🍒', '🍋', '🔔', '⭐️', '7️⃣', '💎', '🍒', '🍋', '🔔'];
+const SYMBOLS = ['💎', '🍒', '🍋', '🔔', '⭐️', '7️⃣', '💰', '🍀', '🍎', '🍇'];
+// We use 5 sets of symbols to ensure plenty of room for a long spin animation
+const REEL_STRIP = [...SYMBOLS, ...SYMBOLS, ...SYMBOLS, ...SYMBOLS, ...SYMBOLS];
 
 export const Slots: React.FC<{ balance: number; updateBalance: (a: number) => void }> = ({ balance, updateBalance }) => {
   const [bet, setBet] = useState(10);
   const [spinning, setSpinning] = useState(false);
+  const [useTransition, setUseTransition] = useState(true);
   const [message, setMessage] = useState('');
-  const [reels, setReels] = useState([0, 0, 0]); // Indices of SYMBOLS
-  const [targetReels, setTargetReels] = useState([0, 0, 0]);
+  const [reels, setReels] = useState([0, 0, 0]); // Indices relative to SYMBOLS array
 
   const spin = () => {
     const validBet = Math.min(Math.max(1, bet), balance);
     if (balance < validBet || validBet <= 0 || spinning) return;
     updateBalance(-validBet);
+    
+    setUseTransition(true);
     setSpinning(true);
     setMessage('');
 
-    const newTargets = [
-      Math.floor(Math.random() * (SYMBOLS.length - 1)),
-      Math.floor(Math.random() * (SYMBOLS.length - 1)),
-      Math.floor(Math.random() * (SYMBOLS.length - 1)),
+    // Final visible results (base index 0-9)
+    const results = [
+      Math.floor(Math.random() * SYMBOLS.length),
+      Math.floor(Math.random() * SYMBOLS.length),
+      Math.floor(Math.random() * SYMBOLS.length)
     ];
-    setTargetReels(newTargets);
 
+    // Target the symbols in the 4th set (indices 30-39) for a long forward spin
+    const spinTargets = results.map(r => r + SYMBOLS.length * 3);
+    setReels(spinTargets);
+
+    // 2000ms matches the CSS transition duration
     setTimeout(() => {
-      setReels(newTargets);
+      // 1. Instantly disable transition
+      setUseTransition(false);
+      
+      // 2. Snap to the equivalent position in the 1st set (indices 0-9)
+      // Since useTransition is false, this happens instantly (no "roll back")
+      setReels(results);
+      
       setSpinning(false);
-      checkWin(newTargets, validBet);
+      checkWin(results, validBet);
     }, 2000);
   };
 
   const checkWin = (indices: number[], currentBet: number) => {
     const results = indices.map(i => SYMBOLS[i]);
     if (results[0] === results[1] && results[1] === results[2]) {
-      const win = currentBet * 10;
+      const win = currentBet * 25;
       updateBalance(win);
       setMessage(`JACKPOT! +$${win}`);
     } else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
-      const win = currentBet * 2;
+      const win = currentBet * 3;
       updateBalance(win);
-      setMessage(`Nice! +$${win}`);
+      setMessage(`NICE! +$${win}`);
     } else {
-      setMessage('Try again!');
+      setMessage('TRY AGAIN');
     }
+  };
+
+  const getTransform = (index: number) => {
+    const percentage = (index / REEL_STRIP.length) * 100;
+    return `translateY(-${percentage}%)`;
   };
 
   return (
     <div className="flex flex-col items-center gap-10">
-      <div className="flex gap-4 p-8 bg-zinc-950 rounded-[3rem] border-8 border-zinc-900 shadow-2xl relative">
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-yellow-500/20 z-0" />
-        {reels.map((_, i) => (
+      <div className="flex gap-4 p-8 bg-zinc-950 rounded-[3rem] border-8 border-zinc-900 shadow-[0_0_50px_rgba(0,0,0,0.5),inset_0_0_20px_rgba(255,255,255,0.05)] relative overflow-hidden">
+        {/* Visual Guide Overlay */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-24 sm:h-32 bg-yellow-500/5 z-20 pointer-events-none border-y border-yellow-500/10" />
+        <div className="absolute inset-0 z-30 pointer-events-none rounded-[2.5rem] shadow-[inset_0_0_60px_rgba(0,0,0,0.8)]" />
+        
+        {reels.map((pos, i) => (
           <div key={i} className="w-24 h-40 sm:w-32 sm:h-56 bg-zinc-900 rounded-3xl flex flex-col items-center overflow-hidden border border-white/5 shadow-inner relative z-10">
             <div 
-              className={`flex flex-col transition-all duration-[2000ms] cubic-bezier(0.45, 0.05, 0.55, 0.95)`}
-              style={{ transform: spinning ? `translateY(-${(SYMBOLS.length - 1) * 100}%)` : `translateY(-${reels[i] * 100}%)` }}
+              className={`flex flex-col ${useTransition ? 'transition-transform duration-[2000ms] [transition-timing-function:cubic-bezier(0.45,0.05,0.2,1)]' : 'transition-none'}`}
+              style={{ transform: getTransform(pos) }}
             >
-              {[...SYMBOLS, ...SYMBOLS].map((s, idx) => (
-                <div key={idx} className="h-40 sm:h-56 flex items-center justify-center text-5xl sm:text-7xl shrink-0">
+              {REEL_STRIP.map((s, idx) => (
+                <div key={idx} className="h-40 sm:h-56 flex items-center justify-center text-5xl sm:text-7xl shrink-0 select-none drop-shadow-2xl">
                   {s}
                 </div>
               ))}
@@ -67,10 +90,10 @@ export const Slots: React.FC<{ balance: number; updateBalance: (a: number) => vo
 
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
         <div className="w-full bg-zinc-900/50 p-6 rounded-[2.5rem] border border-white/10 space-y-4 shadow-xl">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 block text-center">Stake Amount</label>
+          <div className="space-y-2 text-center">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Bet Amount</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
               <input
                 type="number"
                 min="1"
@@ -78,32 +101,24 @@ export const Slots: React.FC<{ balance: number; updateBalance: (a: number) => vo
                 value={bet}
                 onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
                 disabled={spinning}
-                className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 pl-9 pr-4 mono text-white font-bold focus:outline-none focus:ring-4 focus:ring-yellow-500/20 transition-all"
+                className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 pl-10 pr-4 mono text-white font-bold text-xl text-center focus:outline-none focus:ring-4 focus:ring-yellow-500/20 transition-all"
               />
             </div>
-          </div>
-          <div className="flex gap-2">
-            {[5, 10, 25, 100].map(v => (
-              <button 
-                key={v} 
-                onClick={() => setBet(v)} 
-                disabled={spinning}
-                className={`flex-1 py-3 rounded-xl text-xs font-black transition-all ${bet === v ? 'bg-yellow-600 text-white shadow-lg' : 'bg-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
-              >
-                ${v}
-              </button>
-            ))}
           </div>
           <button
             onClick={spin}
             disabled={spinning || balance < bet || bet <= 0}
-            className="w-full py-6 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-2xl shadow-yellow-600/30 uppercase tracking-widest text-xl transition-all active:scale-95"
+            className="w-full py-6 bg-gradient-to-r from-yellow-500 via-amber-600 to-orange-600 hover:from-yellow-400 hover:to-orange-500 disabled:opacity-50 text-white font-black rounded-2xl shadow-2xl shadow-orange-600/30 uppercase tracking-[0.3em] text-2xl transition-all active:scale-95"
           >
-            {spinning ? 'SPINNING...' : 'PULL LEVER'}
+            {spinning ? 'SPINNING...' : 'JACKPOT SPIN'}
           </button>
         </div>
-        <div className="h-10">
-          {message && <div className="text-3xl font-black text-yellow-400 animate-bounce uppercase tracking-widest text-neon drop-shadow-lg">{message}</div>}
+        <div className="h-12 flex items-center">
+          {message && (
+            <div className={`text-3xl font-black uppercase tracking-widest text-neon animate-in zoom-in duration-300 ${message.includes('WIN') ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]' : 'text-zinc-600'}`}>
+              {message}
+            </div>
+          )}
         </div>
       </div>
     </div>

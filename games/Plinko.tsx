@@ -17,12 +17,12 @@ const PEG_RADIUS = 3;
 const BALL_RADIUS = 6;
 const GRAVITY = 0.22;
 const FRICTION = 0.98;
-const BOUNCE_X = 1.4;
+const BOUNCE_X = 1.6; // Increased bounce slightly
 const WIDTH = 600;
 const HEIGHT = 550;
 const STAGGER_MS = 100;
 
-// NEW FAIR MULTIPLIERS (Much easier to profit)
+// High-value outer zones
 const MULTIPLIERS = [30, 15, 8, 4, 1.5, 0.7, 0.7, 0.7, 0.7, 1.5, 4, 8, 15, 30];
 
 const BALL_COLORS = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24'];
@@ -52,10 +52,10 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
     setSessionWin(0);
 
     for (let i = 0; i < ballCount; i++) {
-      const color = BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
+      const color = BALL_COLORS[i % BALL_COLORS.length];
       const newBall: Ball = {
         id: idCounter.current++,
-        x: WIDTH / 2 + (Math.random() - 0.5) * 10, 
+        x: WIDTH / 2 + (Math.random() - 0.5) * 30, // Wider drop variance
         y: 20,
         vx: (Math.random() - 0.5) * 1.5,
         vy: 0,
@@ -86,8 +86,13 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
 
       const currentPegY = 60 + row * rowHeight;
       if (y >= currentPegY && row < ROWS) {
-        vx = (Math.random() - 0.5) * BOUNCE_X * 4;
-        vy = 1.5;
+        // EASY BIAS: Calculate distance from center
+        // Balls further from center get an extra push away from center
+        const centerDist = x - WIDTH / 2;
+        const bias = centerDist / (WIDTH / 2) * 0.75; // Increased bias from 0.4 to 0.75 for extra "ease"
+        
+        vx = (Math.random() - 0.5 + bias) * BOUNCE_X * 5.5;
+        vy = 1.1;
         row += 1;
       }
 
@@ -104,7 +109,8 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
         return { ...ball, active: false, y: HEIGHT + 200 };
       }
 
-      if (x < 15 || x > WIDTH - 15) vx *= -0.7;
+      if (x < 15) { x = 15; vx *= -0.8; }
+      if (x > WIDTH - 15) { x = WIDTH - 15; vx *= -0.8; }
 
       return { ...ball, x, y, vx, vy, row };
     });
@@ -151,7 +157,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
                   width={slotWidth - 8}
                   height={36}
                   rx={10}
-                  className={`${color} stroke-white/20`}
+                  className={`${color} stroke-white/20 transition-colors`}
                 />
                 <text
                   x={i * slotWidth + slotWidth / 2}
@@ -180,7 +186,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
 
       <div className="w-full xl:w-96 flex flex-col gap-6 bg-zinc-900/80 p-8 rounded-[3rem] border border-white/10 backdrop-blur-2xl shadow-2xl">
         <div className="flex justify-between items-center">
-          <h3 className="text-3xl font-black italic tracking-tighter text-pink-400 text-neon">PLINKO TURBO</h3>
+          <h3 className="text-3xl font-black italic tracking-tighter text-pink-400 text-neon">PLINKO PRO</h3>
           <div className="text-right">
              <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Total Stake</div>
              <div className="text-xl font-black text-white">${totalStake.toFixed(2)}</div>
@@ -220,10 +226,11 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
         </div>
 
         <div className="p-4 bg-zinc-950 rounded-2xl border border-white/5 flex flex-col items-center justify-center">
-          <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Session Profit</div>
+          <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mb-1">Session Returns</div>
           <div className={`text-2xl font-black ${sessionWin >= totalStake ? 'text-emerald-400' : sessionWin > 0 ? 'text-amber-400' : 'text-zinc-500'}`}>
             ${sessionWin.toFixed(2)}
           </div>
+          <div className="text-[10px] text-zinc-600 font-bold mt-1">Net: ${(sessionWin - totalStake).toFixed(2)}</div>
         </div>
 
         <button

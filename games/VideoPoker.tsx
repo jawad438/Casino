@@ -14,7 +14,13 @@ export const VideoPoker: React.FC<{ balance: number; updateBalance: (a: number) 
 
   const createDeck = () => {
     const deck: Card[] = [];
-    SUITS.forEach(s => VALUES.forEach(v => deck.push({ suit: s, value: v, rank: VALUES.indexOf(v) })));
+    // Fix: Added missing 'id' property to the card object to satisfy the Card interface requirement
+    SUITS.forEach(s => VALUES.forEach(v => deck.push({ 
+      id: `${s}-${v}-${Math.random().toString(36).substring(2, 11)}`,
+      suit: s, 
+      value: v, 
+      rank: VALUES.indexOf(v) 
+    })));
     return deck.sort(() => Math.random() - 0.5);
   };
 

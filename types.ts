@@ -20,6 +20,7 @@ export interface GameInfo {
 }
 
 export interface Card {
+  id: string;
   suit: 'hearts' | 'diamonds' | 'clubs' | 'spades';
   value: string;
   rank: number;
