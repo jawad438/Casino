@@ -17,13 +17,13 @@ const PEG_RADIUS = 3;
 const BALL_RADIUS = 6;
 const GRAVITY = 0.22;
 const FRICTION = 0.98;
-const BOUNCE_X = 1.6; // Increased bounce slightly
+const BOUNCE_X = 1.8;
 const WIDTH = 600;
 const HEIGHT = 550;
 const STAGGER_MS = 100;
 
-// High-value outer zones
-const MULTIPLIERS = [30, 15, 8, 4, 1.5, 0.7, 0.7, 0.7, 0.7, 1.5, 4, 8, 15, 30];
+// High-value outer zones (13 slots for 12 rows of pegs)
+const MULTIPLIERS = [25, 12, 7, 4, 1.5, 0.5, 0.2, 0.5, 1.5, 4, 7, 12, 25];
 
 const BALL_COLORS = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24'];
 
@@ -55,9 +55,9 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
       const color = BALL_COLORS[i % BALL_COLORS.length];
       const newBall: Ball = {
         id: idCounter.current++,
-        x: WIDTH / 2 + (Math.random() - 0.5) * 30, // Wider drop variance
+        x: WIDTH / 2 + (Math.random() - 0.5) * 4, // Drop nearly exactly in center
         y: 20,
-        vx: (Math.random() - 0.5) * 1.5,
+        vx: 0,
         vy: 0,
         row: 0,
         bet: betPerBall,
@@ -86,13 +86,13 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
 
       const currentPegY = 60 + row * rowHeight;
       if (y >= currentPegY && row < ROWS) {
-        // EASY BIAS: Calculate distance from center
-        // Balls further from center get an extra push away from center
-        const centerDist = x - WIDTH / 2;
-        const bias = centerDist / (WIDTH / 2) * 0.75; // Increased bias from 0.4 to 0.75 for extra "ease"
+        // FAIR 50/50 CHOICE: 
+        // Each peg hit is a Bernoulli trial, exactly like a Galton Board.
+        const direction = Math.random() < 0.5 ? -1 : 1;
         
-        vx = (Math.random() - 0.5 + bias) * BOUNCE_X * 5.5;
-        vy = 1.1;
+        // Apply horizontal impulse
+        vx = direction * (BOUNCE_X + Math.random() * 1.5);
+        vy = 1.2; // Reset vertical momentum to ensure it hits the next row properly
         row += 1;
       }
 
@@ -109,6 +109,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
         return { ...ball, active: false, y: HEIGHT + 200 };
       }
 
+      // Wall bounces
       if (x < 15) { x = 15; vx *= -0.8; }
       if (x > WIDTH - 15) { x = WIDTH - 15; vx *= -0.8; }
 
@@ -148,7 +149,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
 
           {MULTIPLIERS.map((m, i) => {
             const slotWidth = WIDTH / MULTIPLIERS.length;
-            const color = m >= 1.5 ? 'fill-pink-500' : 'fill-zinc-800';
+            const color = m >= 1.5 ? 'fill-pink-500' : m >= 0.5 ? 'fill-zinc-700' : 'fill-zinc-900';
             return (
               <g key={`slot-${i}`}>
                 <rect
@@ -163,7 +164,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
                   x={i * slotWidth + slotWidth / 2}
                   y={HEIGHT - 28}
                   textAnchor="middle"
-                  className="fill-white text-[11px] font-black pointer-events-none text-neon"
+                  className="fill-white text-[10px] font-black pointer-events-none text-neon"
                 >
                   {m}x
                 </text>
@@ -186,7 +187,7 @@ export const Plinko: React.FC<{ balance: number; updateBalance: (a: number) => v
 
       <div className="w-full xl:w-96 flex flex-col gap-6 bg-zinc-900/80 p-8 rounded-[3rem] border border-white/10 backdrop-blur-2xl shadow-2xl">
         <div className="flex justify-between items-center">
-          <h3 className="text-3xl font-black italic tracking-tighter text-pink-400 text-neon">PLINKO PRO</h3>
+          <h3 className="text-3xl font-black italic tracking-tighter text-pink-400 text-neon uppercase">Fair Plinko</h3>
           <div className="text-right">
              <div className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Total Stake</div>
              <div className="text-xl font-black text-white">${totalStake.toFixed(2)}</div>
