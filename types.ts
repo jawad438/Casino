@@ -9,7 +9,17 @@ export type GameID =
   | 'dice' 
   | 'baccarat' 
   | 'poker' 
-  | 'wheel';
+  | 'wheel'
+  | 'limbo'
+  | 'keno'
+  | 'coinflip'
+  | 'hilo'
+  | 'towers'
+  | 'rockpaperscissors'
+  | 'investor'
+  | 'momentum'
+  | 'crowd'
+  | 'decay';
 
 export interface GameInfo {
   id: GameID;

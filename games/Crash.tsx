@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
-export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => void }> = ({ balance, updateBalance }) => {
+export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => void; setLocked?: (l: boolean) => void }> = ({ balance, updateBalance, setLocked }) => {
   const [bet, setBet] = useState(10);
   const [multiplier, setMultiplier] = useState(1.0);
   const [status, setStatus] = useState<'idle' | 'running' | 'crashed' | 'cashedOut'>('idle');
@@ -12,7 +13,6 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
   const runningRef = useRef<boolean>(false);
   const betRef = useRef<number>(10);
 
-  // Growth speed coefficient
   const GROWTH_SPEED = 0.07;
 
   const startGame = () => {
@@ -22,15 +22,12 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
     updateBalance(-validBet);
     betRef.current = validBet;
     
-    // Calculate crash point using standard crash distribution: 99 / (100 - X)
-    // Here we use 0.98 to give a ~2% house edge (instant crash at 1.00x)
     const random = Math.random();
-    // Formula: 0.98 / (1 - random)
-    // We clamp it to 1.00 as the minimum
     crashPointRef.current = Math.max(1.00, 0.98 / (1 - random));
     
     setMultiplier(1.0);
     setStatus('running');
+    setLocked?.(true);
     runningRef.current = true;
     
     startTimeRef.current = performance.now();
@@ -39,17 +36,14 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
 
   const animate = (time: number) => {
     if (!runningRef.current) return;
-
     const elapsed = (time - startTimeRef.current) / 1000;
-    
-    // Exponential growth formula: e^(GROWTH_SPEED * t)
-    // This provides a smooth, accelerating climb
     const currentMult = Math.pow(Math.E, GROWTH_SPEED * elapsed * 10);
     
     if (currentMult >= crashPointRef.current) {
       setMultiplier(crashPointRef.current);
       runningRef.current = false;
       setStatus('crashed');
+      setLocked?.(false);
       return;
     }
 
@@ -59,42 +53,28 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
 
   const cashOut = () => {
     if (!runningRef.current || status !== 'running') return;
-    
     runningRef.current = false;
-    const currentMultiplier = multiplier; // Capture current state
+    const currentMultiplier = multiplier;
     const win = betRef.current * currentMultiplier;
-    
     updateBalance(win);
     setCashoutAmount(win);
     setStatus('cashedOut');
-    
-    if (requestRef.current) {
-      cancelAnimationFrame(requestRef.current);
-    }
+    setLocked?.(false);
+    if (requestRef.current) cancelAnimationFrame(requestRef.current);
   };
 
   useEffect(() => {
     return () => {
       runningRef.current = false;
-      if (requestRef.current !== 0) {
-        cancelAnimationFrame(requestRef.current);
-      }
+      if (requestRef.current !== 0) cancelAnimationFrame(requestRef.current);
+      setLocked?.(false);
     };
   }, []);
 
   return (
     <div className="flex flex-col items-center gap-12">
       <div className="relative w-full h-64 bg-zinc-950 rounded-[3rem] border border-white/10 flex items-center justify-center overflow-hidden shadow-2xl">
-        {/* Dynamic Background Pulse */}
-        <div 
-          className="absolute inset-0 bg-fuchsia-600 opacity-0 transition-opacity duration-700"
-          style={{ 
-            opacity: status === 'running' ? Math.min(0.4, (multiplier - 1) * 0.05) : 0,
-            background: status === 'crashed' ? 'rgba(239, 68, 68, 0.1)' : undefined
-          }}
-        />
-        
-        {/* Speed lines effect */}
+        <div className="absolute inset-0 bg-fuchsia-600 opacity-0 transition-opacity duration-700" style={{ opacity: status === 'running' ? Math.min(0.4, (multiplier - 1) * 0.05) : 0, background: status === 'crashed' ? 'rgba(239, 68, 68, 0.1)' : undefined }} />
         {status === 'running' && (
           <div className="absolute inset-0 pointer-events-none opacity-20">
             <div className="absolute top-1/4 left-[-10%] w-[120%] h-[1px] bg-white animate-pulse" />
@@ -102,66 +82,23 @@ export const Crash: React.FC<{ balance: number; updateBalance: (a: number) => vo
             <div className="absolute top-3/4 left-[-10%] w-[120%] h-[1px] bg-white animate-pulse delay-150" />
           </div>
         )}
-
-        <div className={`text-8xl sm:text-9xl font-black mono transition-all z-10 select-none ${status === 'crashed' ? 'text-red-500 scale-95' : status === 'cashedOut' ? 'text-emerald-400' : 'text-white text-neon'}`}>
-          {multiplier.toFixed(2)}x
-        </div>
+        <div className={`text-8xl sm:text-9xl font-black mono transition-all z-10 select-none ${status === 'crashed' ? 'text-red-500 scale-95' : status === 'cashedOut' ? 'text-emerald-400' : 'text-white text-neon'}`}>{multiplier.toFixed(2)}x</div>
       </div>
-
       <div className="flex flex-col items-center gap-6 w-full max-w-md">
         {status !== 'running' ? (
           <div className="w-full space-y-4 bg-zinc-900/80 p-8 rounded-[2.5rem] border border-white/10 shadow-xl backdrop-blur-xl">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block text-center">Stake Amount</label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
-                <input
-                  type="number"
-                  min="1"
-                  max={balance}
-                  value={bet}
-                  onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 pl-10 pr-4 mono text-white font-bold text-xl focus:outline-none focus:ring-4 focus:ring-fuchsia-500/30 transition-all"
-                />
-              </div>
+            <div className="space-y-2 text-center"><label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 block">Stake Amount</label>
+              <div className="relative"><span className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span><input type="number" min="1" max={balance} value={bet} onChange={(e) => setBet(Math.max(0, parseInt(e.target.value) || 0))} className="w-full bg-zinc-950 border border-white/10 rounded-2xl py-4 pl-10 pr-4 mono text-white font-bold text-xl focus:outline-none focus:ring-4 focus:ring-fuchsia-500/30 transition-all" /></div>
             </div>
-            <button
-              onClick={startGame}
-              disabled={balance < bet || bet <= 0}
-              className="w-full py-6 bg-gradient-to-r from-fuchsia-600 to-purple-700 hover:from-fuchsia-500 hover:to-purple-600 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-fuchsia-600/30 uppercase tracking-[0.2em] text-xl transition-all active:scale-95"
-            >
-              LAUNCH MISSION
-            </button>
+            <button onClick={startGame} disabled={balance < bet || bet <= 0} className="w-full py-6 bg-gradient-to-r from-fuchsia-600 to-purple-700 hover:from-fuchsia-500 hover:to-purple-600 disabled:opacity-50 text-white font-black rounded-2xl shadow-xl shadow-fuchsia-600/30 uppercase tracking-[0.2em] text-xl transition-all active:scale-95">LAUNCH MISSION</button>
           </div>
         ) : (
-          <div className="w-full flex flex-col gap-4">
-            <button
-              onClick={cashOut}
-              className="w-full py-8 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-[2rem] shadow-2xl shadow-emerald-500/30 uppercase tracking-[0.3em] text-4xl transition-all active:scale-95"
-            >
-              CASH OUT
-              <div className="text-xs opacity-70 mt-1 font-bold">WORTH: ${(betRef.current * multiplier).toFixed(2)}</div>
-            </button>
-          </div>
+          <button onClick={cashOut} className="w-full py-8 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black rounded-[2rem] shadow-2xl shadow-emerald-500/30 uppercase tracking-[0.3em] text-4xl transition-all active:scale-95">CASH OUT<div className="text-xs opacity-70 mt-1 font-bold">WORTH: ${(betRef.current * multiplier).toFixed(2)}</div></button>
         )}
-        
         <div className="h-12 flex items-center justify-center">
-          {status === 'crashed' && (
-            <div className="text-2xl font-black text-red-500 uppercase tracking-widest text-neon animate-in zoom-in duration-300">
-              CRASHED @ {multiplier.toFixed(2)}x
-            </div>
-          )}
-          {status === 'cashedOut' && (
-            <div className="text-2xl font-black text-emerald-400 uppercase tracking-widest text-neon animate-bounce">
-              PROFIT: +${(cashoutAmount - betRef.current).toFixed(2)}
-            </div>
-          )}
+          {status === 'crashed' && <div className="text-2xl font-black text-red-500 uppercase tracking-widest text-neon animate-in zoom-in duration-300">CRASHED @ {multiplier.toFixed(2)}x</div>}
+          {status === 'cashedOut' && <div className="text-2xl font-black text-emerald-400 uppercase tracking-widest text-neon animate-bounce">PROFIT: +${(cashoutAmount - betRef.current).toFixed(2)}</div>}
         </div>
-      </div>
-      
-      <div className="text-center space-y-1">
-        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-50 italic">Fair Provable Odds • 2% House Edge</p>
-        <p className="text-[9px] text-zinc-600 font-medium">Pre-determined crash points prevent lag influence.</p>
       </div>
     </div>
   );

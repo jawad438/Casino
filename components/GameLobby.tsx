@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GameID, GameInfo } from '../types';
 
@@ -5,13 +6,23 @@ const GAMES: GameInfo[] = [
   { id: 'blackjack', name: 'Blackjack', description: 'Fair Deck rules.', icon: '♠️', color: 'from-blue-400 to-indigo-600' },
   { id: 'roulette', name: 'Roulette', description: 'Classic European wheel.', icon: '🎡', color: 'from-rose-400 to-red-600' },
   { id: 'slots', name: 'Slots', description: 'Triple diamond reels.', icon: '🎰', color: 'from-amber-300 to-orange-500' },
+  { id: 'investor', name: 'The Investor', description: 'Real-time market logic.', icon: '📈', color: 'from-emerald-400 to-green-700' },
+  { id: 'momentum', name: 'Momentum', description: 'Vector physics gamble.', icon: '🚀', color: 'from-cyan-400 to-blue-600' },
   { id: 'crash', name: 'The Moon', description: 'Race to the stars.', icon: '🚀', color: 'from-fuchsia-400 to-purple-600' },
+  { id: 'crowd', name: 'The Crowd', description: 'Political sentiment gamble.', icon: '👥', color: 'from-pink-500 to-purple-800' },
+  { id: 'decay', name: 'Decay', description: 'System survival gamble.', icon: '🏚️', color: 'from-amber-700 to-zinc-900' },
   { id: 'mines', name: 'Mines', description: 'Uncover the treasure.', icon: '💎', color: 'from-emerald-400 to-teal-600' },
   { id: 'plinko', name: 'Plinko', description: 'Drop for massive wins.', icon: '🏐', color: 'from-pink-400 to-rose-500' },
   { id: 'dice', name: 'Dice Duel', description: 'Shoot for high stakes.', icon: '🎲', color: 'from-orange-400 to-amber-600' },
   { id: 'baccarat', name: 'Baccarat', description: '50/50 Player vs Banker.', icon: '🤵', color: 'from-indigo-400 to-blue-600' },
   { id: 'poker', name: 'Video Poker', description: 'Jacks or better.', icon: '🃏', color: 'from-red-400 to-rose-600' },
   { id: 'wheel', name: 'Fortune', description: 'Spin for multipliers.', icon: '🌀', color: 'from-cyan-400 to-blue-500' },
+  { id: 'limbo', name: 'Limbo', description: 'Aim for the moon.', icon: '⚡', color: 'from-lime-400 to-green-600' },
+  { id: 'keno', name: 'Keno', description: 'Lucky numbers draw.', icon: '🎟️', color: 'from-sky-400 to-blue-600' },
+  { id: 'coinflip', name: 'Coin Flip', description: 'Double or nothing.', icon: '💵', color: 'from-yellow-400 to-orange-600' },
+  { id: 'hilo', name: 'Hi-Lo', description: 'Predict the next card.', icon: '↕️', color: 'from-violet-400 to-purple-600' },
+  { id: 'towers', name: 'Towers', description: 'Climb for the jackpot.', icon: '🏰', color: 'from-slate-400 to-slate-700' },
+  { id: 'rockpaperscissors', name: 'R-P-S', description: 'Old school gamble.', icon: '✊', color: 'from-orange-500 to-red-700' },
 ];
 
 interface LobbyProps {
@@ -20,7 +31,7 @@ interface LobbyProps {
 
 export const GameLobby: React.FC<LobbyProps> = ({ onSelectGame }) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto pb-20">
       {GAMES.map((game) => (
         <button
           key={game.id}
