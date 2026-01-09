@@ -62,7 +62,7 @@ export const GameWrapper: React.FC<GameWrapperProps> = ({ gameId, balance, updat
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6">
+    <div className={`${gameId === 'plinko' ? 'max-w-[1600px]' : 'max-w-6xl'} mx-auto flex flex-col gap-6 w-full`}>
       <button 
         onClick={() => !isLocked && onBack()}
         disabled={isLocked}
@@ -73,7 +73,7 @@ export const GameWrapper: React.FC<GameWrapperProps> = ({ gameId, balance, updat
         </svg>
         {isLocked ? 'Game in Progress...' : 'Back to Lobby'}
       </button>
-      <div className="card-gloss rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
+      <div className="card-gloss rounded-[2rem] p-4 sm:p-8 shadow-2xl relative overflow-hidden w-full">
         {renderGame()}
       </div>
     </div>
